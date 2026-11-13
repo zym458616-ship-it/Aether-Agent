@@ -72,13 +72,19 @@ build_arch() {
   local ARCH="$1"
   local TARGET="${ARCH}-apple-ios${MIN_IOS}"
   echo "==> compiling $ARCH ($TARGET)"
-  clang -target "$TARGET" -dynamiclib "${COMMON[@]}" \
-    -fuse-ld="$LD64" \
-    -Wl,-install_name,@executable_path/Frameworks/${NAME}.dylib \
-    -Wl,-platform_version,ios,${MIN_IOS},16.5 \
-    -Wl,-undefined,dynamic_lookup \
-    $SRCS "${LIBS[@]}" \
+  local ARGS=(
+    -target "$TARGET" -dynamiclib "${COMMON[@]}"
+    -fuse-ld="$LD64"
+    -Wl,-install_name,@executable_path/Frameworks/${NAME}.dylib
+    -Wl,-platform_version,ios,${MIN_IOS},16.5
+    -Wl,-undefined,dynamic_lookup
+    $SRCS "${LIBS[@]}"
     -o "$OUT/${NAME}-${ARCH}.dylib"
+  )
+  if ! clang "${ARGS[@]}" -Wl,-adhoc_codesign 2>"$OUT/${ARCH}-adhoc.log"; then
+    echo "   (ad-hoc signing unsupported by this linker, retrying without)"
+    clang "${ARGS[@]}"
+  fi
 }
 
 build_arch arm64
@@ -92,7 +98,7 @@ fi
 
 if [ -f "$OUT/${NAME}-arm64e.dylib" ]; then
   python3 scripts/makefat.py "$OUT/${NAME}.dylib" \
-    "$OUT/${NAME}-arm64.dylib" "$OUT/${NAME}-arm64e.dylib"
+    "arm64:$OUT/${NAME}-arm64.dylib" "arm64e:$OUT/${NAME}-arm64e.dylib"
 else
   cp "$OUT/${NAME}-arm64.dylib" "$OUT/${NAME}.dylib"
 fi
