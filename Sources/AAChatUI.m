@@ -554,7 +554,7 @@ static NSString *AAStripImageMarker(NSString *s) {
     [NSLayoutConstraint activateConstraints:@[
         [_composer.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:12],
         [_composer.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-12],
-        [_composer.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-10],
+        [_composer.bottomAnchor constraintEqualToAnchor:self.safeAreaLayoutGuide.bottomAnchor constant:-8],
         [_composer.topAnchor constraintGreaterThanOrEqualToAnchor:_scroll.bottomAnchor constant:0],
 
         [_input.leadingAnchor constraintEqualToAnchor:_composer.leadingAnchor constant:8],
