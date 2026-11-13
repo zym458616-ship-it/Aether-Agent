@@ -683,6 +683,7 @@ static NSString *AAStripImageMarker(NSString *s) {
 }
 
 - (void)reload {
+    if (_streaming && self.liveBubble) return;   // never drop a streaming bubble
     NSString *sid = [AAConfig shared].lastSessionID;
     NSArray *msgs = sid.length ? [[AAStore shared] messages:sid] : @[];
     [self clearStack];
