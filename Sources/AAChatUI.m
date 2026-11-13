@@ -183,14 +183,14 @@ static NSString *AAStripImageMarker(NSString *s) {
 
 @end
 
-@interface AAAAssistantBubble : UIView
+@interface AAAsstBubble : UIView
 @property (nonatomic, strong) UILabel *body;
 @property (nonatomic, strong) UILabel *reasoning;
 - (void)configure:(NSString *)text reasoning:(NSString *)reasoning;
 - (void)setStreaming:(BOOL)streaming;
 @end
 
-@implementation AAAAssistantBubble
+@implementation AAAsstBubble
 
 - (instancetype)init {
     self = [super init];
@@ -429,7 +429,7 @@ static NSString *AAStripImageMarker(NSString *s) {
 }
 @property (nonatomic, strong) UIScrollView *scroll;
 @property (nonatomic, strong) UIStackView *stack;
-@property (nonatomic, strong) AAAAssistantBubble *liveBubble;
+@property (nonatomic, strong) AAAsstBubble *liveBubble;
 @property (nonatomic, strong) NSMutableString *liveText;
 @property (nonatomic, strong) NSMutableString *liveReasoning;
 @property (nonatomic, strong) AAStatusPill *statusPill;
@@ -714,7 +714,7 @@ static NSString *AAStripImageMarker(NSString *s) {
                 }
             }
             if (m.content.length) {
-                AAAAssistantBubble *ab = [[AAAssistantBubble alloc] init];
+                AAAsstBubble *ab = [[AAAsstBubble alloc] init];
                 [ab configure:m.content reasoning:m.reasoning];
                 [self.stack addArrangedSubview:ab];
             }
@@ -725,7 +725,7 @@ static NSString *AAStripImageMarker(NSString *s) {
         }
         if ([m.role isEqualToString:@"assistant"]) {
             if (!m.content.length) continue;
-            AAAAssistantBubble *b = [[AAAssistantBubble alloc] init];
+            AAAsstBubble *b = [[AAAsstBubble alloc] init];
             [b configure:m.content reasoning:m.reasoning];
             [self.stack addArrangedSubview:b];
             continue;
@@ -748,7 +748,7 @@ static NSString *AAStripImageMarker(NSString *s) {
     if (self.stack.arrangedSubviews.count == 1 && self.stack.arrangedSubviews.firstObject == _emptyState) {
         [self clearStack];
     }
-    self.liveBubble = [[AAAAssistantBubble alloc] init];
+    self.liveBubble = [[AAAsstBubble alloc] init];
     [self.liveBubble configure:@"…" reasoning:nil];
     [self.stack addArrangedSubview:self.liveBubble];
     [self scrollToBottom];

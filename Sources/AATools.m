@@ -526,7 +526,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
                 @"description": t.summary,
                 @"parameters": t.schema,
             },
-        })];
+        }];
     }
     return out;
 }

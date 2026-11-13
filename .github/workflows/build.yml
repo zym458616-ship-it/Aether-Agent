@@ -18,7 +18,7 @@ jobs:
       - name: Toolchain info
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq clang lld llvm python3
+          sudo apt-get install -y -qq clang lld-18 llvm python3
           clang --version | head -2
           (ld64.lld --version || true) | head -2
 

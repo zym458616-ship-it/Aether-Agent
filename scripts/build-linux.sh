@@ -20,7 +20,20 @@ fi
 echo "==> SDK : $SDK"
 ls "$SDK/System/Library/Frameworks" 2>/dev/null | head -5 || true
 clang --version | head -2
-(ld64.lld --version 2>/dev/null || echo "ld64.lld not found") | head -2
+
+# Resolve the Mach-O linker (ld64.lld). Ubuntu ships it under a versioned dir.
+LD64=""
+for c in $(command -v ld64.lld 2>/dev/null) /usr/lib/llvm-*/bin/ld64.lld /usr/bin/ld64.lld-* /usr/bin/ld64.lld; do
+  if [ -x "$c" ]; then LD64="$c"; break; fi
+done
+if [ -z "$LD64" ]; then
+  echo "!! ld64.lld not found. Install it:"
+  echo "   sudo apt-get install -y lld"
+  ls /usr/lib/llvm-*/bin 2>/dev/null | grep -i lld || true
+  exit 1
+fi
+echo "==> ld64  : $LD64"
+"$LD64" --version 2>/dev/null | head -2 || true
 
 rm -rf "$OUT"
 mkdir -p "$OUT"
@@ -60,7 +73,7 @@ build_arch() {
   local TARGET="${ARCH}-apple-ios${MIN_IOS}"
   echo "==> compiling $ARCH ($TARGET)"
   clang -target "$TARGET" -dynamiclib "${COMMON[@]}" \
-    -fuse-ld=lld \
+    -fuse-ld="$LD64" \
     -Wl,-install_name,@executable_path/Frameworks/${NAME}.dylib \
     -Wl,-platform_version,ios,${MIN_IOS},16.5 \
     -Wl,-undefined,dynamic_lookup \
