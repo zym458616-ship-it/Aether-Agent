@@ -8,6 +8,7 @@
 @interface AAAgent () {
     BOOL _running;
     BOOL _cancelled;
+    BOOL _taskDone;
     NSInteger _steps;
     NSInteger _lastPromptTokens;
 }
@@ -71,6 +72,7 @@
 
     _running = YES;
     _cancelled = NO;
+    _taskDone = NO;
     _steps = 0;
     _lastPromptTokens = 0;
     [self.pending removeAllObjects];
@@ -182,7 +184,7 @@
         }
         [self.pending removeAllObjects];
         [[AAStore shared] touchSession:self.sid tokens:_lastPromptTokens steps:_steps];
-        if (!_cancelled) {
+        if (!_cancelled && !_taskDone) {
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.15 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 [self step];
             });
@@ -207,7 +209,7 @@
             [self executeCall:m];
         }
         [[AAStore shared] touchSession:self.sid tokens:_lastPromptTokens steps:_steps];
-        if (!_cancelled) {
+        if (!_cancelled && !_taskDone) {
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.15 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 [self step];
             });
@@ -260,9 +262,8 @@
     if (isDone) {
         NSString *summary = [result stringByReplacingOccurrencesOfString:@"TASK_DONE:" withString:@""];
         AALog(@"task done: %@", summary);
-        _cancelled = YES;   // stop the loop after this turn
+        _taskDone = YES;    // stop the loop after this turn
         dispatch_async(dispatch_get_main_queue(), ^{
-            self->_cancelled = NO;
             self->_running = NO;
             if (self.onStatus) self.onStatus(@"已完成");
             if (self.onFinish) self.onFinish(nil);
