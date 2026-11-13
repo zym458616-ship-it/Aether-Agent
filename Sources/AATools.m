@@ -356,9 +356,15 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
         @{@"path": P(@"string", @"可选保存路径")},
         @[], ^NSString *(NSDictionary *a) {
             NSString *path = ArgStr(a, @"path", nil);
+            if (!path.length) {
+                [AAU ensureDataDir];
+                path = [[[AAU dataDir] stringByAppendingPathComponent:@"shots"]
+                        stringByAppendingPathComponent:
+                        [NSString stringWithFormat:@"shot-%.0f.jpg", [[NSDate date] timeIntervalSince1970]]];
+            }
             BOOL ok = [[AAUIBridge shared] saveScreenshot:path];
             if (!ok) return @"截图失败";
-            return [NSString stringWithFormat:@"已保存截图：%@", path.length ? path : @"(见最新 shots 目录)"];
+            return [NSString stringWithFormat:@"已保存截图：%@", path];
         })];
 
     // ------------------------------------------------------------------ app
