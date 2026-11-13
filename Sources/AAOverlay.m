@@ -563,7 +563,8 @@
         self->_panelOpen = YES;
         self->_prevKeyWindow = [UIApplication sharedApplication].keyWindow;
         [self->_panel refreshAll];
-        [self->_panel selectTab:0];
+        // First run: land on settings so the key can be entered right away.
+        [self->_panel selectTab:[[AAConfig shared] isConfigured] ? 0 : 2];
 
         self->_dim.hidden = NO;
         [UIView animateWithDuration:0.32 delay:0 usingSpringWithDamping:0.86 initialSpringVelocity:0.4
@@ -680,6 +681,10 @@
     }]];
     [sheet addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil]];
     sheet.popoverPresentationController.sourceView = _ball;
+    if (!_panelOpen) {
+        _prevKeyWindow = [UIApplication sharedApplication].keyWindow;
+        [_window makeKeyWindow];
+    }
     UIViewController *root = _window.rootViewController;
     [root presentViewController:sheet animated:YES completion:nil];
 }
