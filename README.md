@@ -55,15 +55,18 @@ Aether 把一个大模型 Agent 塞进任意 App 的进程里。打开悬浮球�
 
 ## 四、编译
 
-无需本地 Mac，推送到 GitHub 后由 Actions 的 macOS runner 编译：
+无需本地 Mac。两种方式产出的都是同一份 `Aether.dylib`（`arm64 + arm64e` 通用，ad-hoc 签名，`install_name = @executable_path/Frameworks/Aether.dylib`）：
 
+```bash
+# macOS + Xcode CLT
+./scripts/build.sh
+
+# Linux（CI 用的就是这条：clang + iPhoneOS SDK + ld64.lld 交叉编译）
+./scripts/fetch-sdk.sh      # 稀疏拉取 theos/sdks 的 iPhoneOS16.5.sdk 到 ~/sdk
+./scripts/build-linux.sh
 ```
-scripts/build.sh
-```
 
-产出 `build/Aether.dylib`：`arm64 + arm64e` 通用，ad-hoc 签名，`install_name = @executable_path/Frameworks/Aether.dylib`。
-
-本地编译需要 macOS + Xcode Command Line Tools。
+推送到 GitHub 后 `.github/workflows/build.yml` 会自动编译、上传 artifact 并发布 release。
 
 ## 五、权限与限制（重要，请读完）
 
