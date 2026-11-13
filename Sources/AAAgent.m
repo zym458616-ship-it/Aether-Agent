@@ -279,7 +279,7 @@
     NSInteger reserve = 1600;                 // room for the next completion
     NSInteger limit = MAX(2000, budget - reserve);
 
-    NSMutableArray *kept = [NSMutableArray array];
+    NSMutableArray<AAMessage *> *kept = [NSMutableArray array];
     NSInteger total = 0;
     // Walk backwards, always keeping the newest messages.
     for (AAMessage *m in [all reverseObjectEnumerator]) {
@@ -289,7 +289,7 @@
         total += t;
     }
     // Drop orphan tool messages at the head (their call is gone).
-    while (kept.count && [[kept.firstObject role] isEqualToString:@"tool"]) [kept removeObjectAtIndex:0];
+    while (kept.count && [kept.firstObject.role isEqualToString:@"tool"]) [kept removeObjectAtIndex:0];
     return kept;
 }
 

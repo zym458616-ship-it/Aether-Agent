@@ -90,6 +90,7 @@
 - (BOOL)isConfigured;
 - (NSInteger)effectiveMaxContext;
 - (NSDictionary *)requestHeaders;
++ (NSString *)defaultSystemPrompt;
 
 @end
 
@@ -177,6 +178,7 @@ typedef void (^AAFinishBlock)(NSError *error);
 
 @interface AAExecutor : NSObject
 
++ (NSString *)jbPrefix;
 + (NSString *)shellPath;
 + (NSString *)defaultCWD;
 + (NSString *)environmentPath;

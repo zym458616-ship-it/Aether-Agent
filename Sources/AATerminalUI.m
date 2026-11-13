@@ -15,6 +15,7 @@
 @property (nonatomic, strong) UIActivityIndicatorView *spinner;
 @property (nonatomic, strong) NSMutableString *buffer;
 @property (nonatomic, assign) BOOL running;
+- (void)emit:(NSString *)fmt, ...;
 @end
 
 @implementation AATerminalView
@@ -29,7 +30,7 @@
         NSString *saved = [[NSUserDefaults standardUserDefaults] stringForKey:@"AetherTermCWD"];
         _cwd = saved.length ? saved : NSHomeDirectory();
         [self build];
-        [self print:@"Aether Terminal — 真实 shell（posix_spawn）\n"
+        [self emit:@"Aether Terminal — 真实 shell（posix_spawn）\n"
               "shell: %@\n"
               "cwd:   %@\n"
               "输入 help 查看示例命令。\n\n", [AAExecutor shellPath], _cwd];
@@ -232,7 +233,7 @@
         [AAU toast:@"上一条命令还在执行"];
         return;
     }
-    [self print:@"❯ %@\n", cmd];
+    [self emit:@"❯ %@\n", cmd];
 
     // cd is handled in-process so the terminal keeps a stable working directory.
     if ([cmd hasPrefix:@"cd "] || [cmd isEqualToString:@"cd"]) {
@@ -246,15 +247,15 @@
             self.cwd = target;
             [[NSUserDefaults standardUserDefaults] setObject:target forKey:@"AetherTermCWD"];
             self.cwdLabel.text = [AAU shortPath:target];
-            [self print:@"→ %@\n\n", target];
+            [self emit:@"→ %@\n\n", target];
         } else {
-            [self print:@"cd: 没有这个目录: %@\n\n", target];
+            [self emit:@"cd: 没有这个目录: %@\n\n", target];
         }
         return;
     }
     if ([cmd isEqualToString:@"clear"] || [cmd isEqualToString:@"cls"]) { [self clear]; return; }
     if ([cmd isEqualToString:@"help"]) {
-        [self print:@"示例：\n"
+        [self emit:@"示例：\n"
                 "  ls -la                     列出当前目录\n"
                 "  ls /var/jb/usr/bin        越狱工具目录\n"
                 "  cat /etc/hosts            读取文件\n"
@@ -271,15 +272,15 @@
 
     __weak typeof(self) weakSelf = self;
     [AAExecutor run:cmd cwd:self.cwd timeout:90 onData:^(NSString *chunk) {
-        dispatch_async(dispatch_get_main_queue(), ^{ [weakSelf print:@"%@", chunk]; });
+        dispatch_async(dispatch_get_main_queue(), ^{ [weakSelf emit:@"%@", chunk]; });
     } onExit:^(int status, BOOL timedOut) {
         typeof(self) self_ = weakSelf;
         if (!self_) return;
         self_.running = NO;
         self_.field.enabled = YES;
         [self_.spinner stopAnimating];
-        if (status != 0 || timedOut) [self_ print:@"\n[退出码 %d%@]\n\n", status, timedOut ? @" 超时" : @""];
-        else [self_ print:@"\n"];
+        if (status != 0 || timedOut) [self_ emit:@"\n[退出码 %d%@]\n\n", status, timedOut ? @" 超时" : @""];
+        else [self_ emit:@"\n"];
     }];
 }
 
@@ -287,7 +288,7 @@
     self.output.text = @"";
 }
 
-- (void)print:(NSString *)fmt, ... {
+- (void)emit:(NSString *)fmt, ... {
     va_list args;
     va_start(args, fmt);
     NSString *s = [[NSString alloc] initWithFormat:fmt arguments:args];

@@ -123,7 +123,7 @@ extern char **environ;
 
     NSUInteger argc = args.count;
     char **argv = calloc(argc + 1, sizeof(char *));
-    for (NSUInteger i = 0; i < argc; i++) argv[i] = strdup(args[i].UTF8String ?: "");
+    for (NSUInteger i = 0; i < argc; i++) argv[i] = strdup(((NSString *)args[i]).UTF8String ?: "");
     argv[argc] = NULL;
 
     NSDictionary *envDict = [self environmentWithCWD:workdir];

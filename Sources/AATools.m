@@ -92,7 +92,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             NSString *out = [AAExecutor run:cmd cwd:cwd timeout:to error:&err];
             if (!out.length && err) out = err;
             return Cap(out.length ? out : @"(无输出)", 20000);
-        }));
+        })];
 
     // ------------------------------------------------------------------- fs
     [list addObject:T(@"fs_list", @"fs",
@@ -125,7 +125,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
                 }
             }
             return Cap(s, 20000);
-        }));
+        })];
 
     [list addObject:T(@"fs_read", @"fs",
         @"读取文本文件。支持行偏移，超大文件自动截断。",
@@ -160,7 +160,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             }
             if (end < lines.count) [s appendFormat:@"…(还有 %lu 行)\n", (unsigned long)(lines.count - end)];
             return Cap(s, 24000);
-        }));
+        })];
 
     [list addObject:T(@"fs_write", @"fs",
         @"写入或覆盖文件；append=true 时追加。会自动创建父目录。",
@@ -195,7 +195,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             if (!ok) return [NSString stringWithFormat:@"写入失败: %@", err.localizedDescription ?: @"未知错误"];
             NSDictionary *attr = [fm attributesOfItemAtPath:path error:NULL];
             return [NSString stringWithFormat:@"已写入 %@ (%@)", path, [AAU humanBytes:[attr[NSFileSize] unsignedLongLongValue]]];
-        }));
+        })];
 
     [list addObject:T(@"fs_mkdir", @"fs", @"创建目录（递归）。",
         @{@"path": P(@"string", @"目录路径")}, @[@"path"], ^NSString *(NSDictionary *a) {
@@ -203,7 +203,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             NSError *err = nil;
             BOOL ok = [[NSFileManager defaultManager] createDirectoryAtPath:path withIntermediateDirectories:YES attributes:nil error:&err];
             return ok ? [NSString stringWithFormat:@"已创建 %@", path] : [NSString stringWithFormat:@"失败: %@", err.localizedDescription];
-        }));
+        })];
 
     [list addObject:T(@"fs_delete", @"fs", @"删除文件或目录（递归）。",
         @{@"path": P(@"string", @"目标路径")}, @[@"path"], ^NSString *(NSDictionary *a) {
@@ -212,7 +212,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             NSError *err = nil;
             BOOL ok = [[NSFileManager defaultManager] removeItemAtPath:path error:&err];
             return ok ? [NSString stringWithFormat:@"已删除 %@", path] : [NSString stringWithFormat:@"失败: %@", err.localizedDescription];
-        }));
+        })];
 
     [list addObject:T(@"fs_move", @"fs", @"移动或重命名文件/目录。",
         @{@"from": P(@"string", @"源路径"), @"to": P(@"string", @"目标路径")},
@@ -221,7 +221,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             NSError *err = nil;
             BOOL ok = [[NSFileManager defaultManager] moveItemAtPath:from toPath:to error:&err];
             return ok ? [NSString stringWithFormat:@"%@ → %@", from, to] : [NSString stringWithFormat:@"失败: %@", err.localizedDescription];
-        }));
+        })];
 
     [list addObject:T(@"fs_stat", @"fs", @"查看文件/目录属性（大小、权限、时间）。",
         @{@"path": P(@"string", @"路径")}, @[@"path"], ^NSString *(NSDictionary *a) {
@@ -231,7 +231,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             NSMutableString *s = [NSMutableString stringWithFormat:@"path: %@\n", path];
             for (NSString *k in attr) [s appendFormat:@"%@: %@\n", k, attr[k]];
             return s;
-        }));
+        })];
 
     [list addObject:T(@"fs_search", @"fs",
         @"在目录中按文件名或内容搜索（递归，最多 100 条命中）。",
@@ -277,14 +277,14 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             }
             if (!hits.count) return @"未找到匹配项";
             return Cap([hits componentsJoinedByString:@"\n"], 12000);
-        }));
+        })];
 
     // ------------------------------------------------------------------- ui
     [list addObject:T(@"ui_dump", @"ui",
         @"导出当前 App 的完整界面层级树（含元素 id、类名、文字、坐标）。这是操控界面前的第一步。",
         @{}, @[], ^NSString *(NSDictionary *a) {
             return Cap([[AAUIBridge shared] hierarchyDescription], 24000);
-        }));
+        })];
 
     [list addObject:T(@"ui_find", @"ui",
         @"按文字/类名/id 搜索界面元素，返回匹配项及坐标。",
@@ -295,7 +295,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             NSMutableString *s = [NSMutableString string];
             for (AAElement *e in hits) [s appendFormat:@"[%@] %@\n", e.eid, e.description];
             return Cap(s, 12000);
-        }));
+        })];
 
     [list addObject:T(@"ui_tap", @"ui",
         @"点击屏幕坐标（逻辑点，非像素）。也可传 element_id 直接点击已抓取的元素。",
@@ -312,7 +312,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             if (x < 0 || y < 0) return @"错误：需要 x/y 或 element_id";
             BOOL ok = [[AAUIBridge shared] tapPoint:CGPointMake(x, y)];
             return ok ? [NSString stringWithFormat:@"已点击 (%.0f, %.0f)", x, y] : @"点击失败（没有可命中的视图）";
-        }));
+        })];
 
     [list addObject:T(@"ui_swipe", @"ui",
         @"从一点滑动到另一点（用于滚动/翻页/拖拽）。",
@@ -324,7 +324,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             CGPoint p2 = CGPointMake(ArgNum(a, @"x2", 0), ArgNum(a, @"y2", 0));
             BOOL ok = [[AAUIBridge shared] swipeFrom:p1 to:p2 duration:ArgNum(a, @"duration", 0.35)];
             return ok ? [NSString stringWithFormat:@"已滑动 (%.0f,%.0f) → (%.0f,%.0f)", p1.x, p1.y, p2.x, p2.y] : @"滑动失败";
-        }));
+        })];
 
     [list addObject:T(@"ui_longpress", @"ui", @"长按坐标。",
         @{@"x": P(@"number", @"x"), @"y": P(@"number", @"y"),
@@ -333,7 +333,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             CGPoint p = CGPointMake(ArgNum(a, @"x", 0), ArgNum(a, @"y", 0));
             BOOL ok = [[AAUIBridge shared] longPress:p duration:ArgNum(a, @"duration", 0.7)];
             return ok ? @"已长按" : @"长按失败";
-        }));
+        })];
 
     [list addObject:T(@"ui_input", @"ui",
         @"向当前焦点输入框输入文本（会先尝试聚焦可编辑控件）。",
@@ -341,7 +341,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             NSString *text = ArgStr(a, @"text", @"");
             BOOL ok = [[AAUIBridge shared] inputText:text];
             return ok ? [NSString stringWithFormat:@"已输入 %lu 字符", (unsigned long)text.length] : @"输入失败：找不到可编辑控件";
-        }));
+        })];
 
     [list addObject:T(@"ui_scroll", @"ui",
         @"滚动当前屏幕中的第一个滚动视图。dy>0 向上滚动（内容上移）。",
@@ -349,7 +349,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
         @[@"dy"], ^NSString *(NSDictionary *a) {
             BOOL ok = [[AAUIBridge shared] scrollBy:ArgNum(a, @"dy", 300)];
             return ok ? @"已滚动" : @"滚动失败：未找到滚动视图";
-        }));
+        })];
 
     [list addObject:T(@"screenshot", @"ui",
         @"截取当前 App 画面并保存为 JPEG，返回文件路径。启用视觉输入后模型可直接看图。",
@@ -359,7 +359,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             BOOL ok = [[AAUIBridge shared] saveScreenshot:path];
             if (!ok) return @"截图失败";
             return [NSString stringWithFormat:@"已保存截图：%@", path.length ? path : @"(见最新 shots 目录)"];
-        }));
+        })];
 
     // ------------------------------------------------------------------ app
     [list addObject:T(@"app_info", @"app", @"当前 App 信息（bundle id、版本、容器路径、进程与设备信息）。",
@@ -369,7 +369,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             for (NSString *k in [info.allKeys sortedArrayUsingSelector:@selector(compare:)])
                 [s appendFormat:@"%@: %@\n", k, info[k]];
             return s;
-        }));
+        })];
 
     [list addObject:T(@"list_apps", @"app", @"列出设备上已安装的应用（bundle id + 名称）。",
         @{}, @[], ^NSString *(NSDictionary *a) {
@@ -386,7 +386,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             }
             [lines sortUsingSelector:@selector(compare:)];
             return Cap([lines componentsJoinedByString:@"\n"], 16000);
-        }));
+        })];
 
     [list addObject:T(@"launch_app", @"app", @"通过 bundle id 启动另一个 App（会离开当前 App）。",
         @{@"bundle_id": P(@"string", @"目标 App 的 bundle id")},
@@ -404,7 +404,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             id workspace = [ws performSelector:@selector(defaultWorkspace)];
             BOOL ok = [workspace performSelector:@selector(openApplicationWithBundleID:) withObject:bid] ? YES : NO;
             return ok ? [NSString stringWithFormat:@"已启动 %@", bid] : [NSString stringWithFormat:@"启动失败: %@", bid];
-        }));
+        })];
 
     [list addObject:T(@"open_url", @"app", @"用系统打开 URL（支持 http/https/自定义 scheme）。",
         @{@"url": P(@"string", @"URL")}, @[@"url"], ^NSString *(NSDictionary *a) {
@@ -421,7 +421,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             });
             dispatch_semaphore_wait(sem, dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)));
             return ok ? [NSString stringWithFormat:@"已打开 %@", u] : @"打开失败或超时";
-        }));
+        })];
 
     // ------------------------------------------------------------------ net
     [list addObject:T(@"http_request", @"net",
@@ -459,21 +459,21 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             NSString *txt = [[NSString alloc] initWithData:respData encoding:NSUTF8StringEncoding];
             if (!txt) txt = [NSString stringWithFormat:@"(二进制 %@)", [AAU humanBytes:respData.length]];
             return Cap([NSString stringWithFormat:@"HTTP %ld\n%@", (long)code, txt], 16000);
-        }));
+        })];
 
     // ----------------------------------------------------------------- misc
     [list addObject:T(@"clipboard_get", @"misc", @"读取系统剪贴板。", @{}, @[], ^NSString *(NSDictionary *a) {
         __block NSString *s = nil;
         dispatch_sync(dispatch_get_main_queue(), ^{ s = [UIPasteboard generalPasteboard].string; });
         return s.length ? s : @"(剪贴板为空)";
-    }));
+    })];
 
     [list addObject:T(@"clipboard_set", @"misc", @"写入系统剪贴板。",
         @{@"text": P(@"string", @"内容")}, @[@"text"], ^NSString *(NSDictionary *a) {
             NSString *text = ArgStr(a, @"text", @"");
             dispatch_sync(dispatch_get_main_queue(), ^{ [UIPasteboard generalPasteboard].string = text; });
             return @"已写入剪贴板";
-        }));
+        })];
 
     [list addObject:T(@"wait", @"misc", @"等待若干秒（用于等待界面加载）。",
         @{@"seconds": P(@"number", @"秒，最大 30")}, @[@"seconds"], ^NSString *(NSDictionary *a) {
@@ -482,7 +482,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             if (s > 30) s = 30;
             [NSThread sleepForTimeInterval:s];
             return [NSString stringWithFormat:@"已等待 %.1f 秒", s];
-        }));
+        })];
 
     [list addObject:T(@"sys_info", @"misc", @"系统信息：型号、系统版本、内存、磁盘、电池。",
         @{}, @[], ^NSString *(NSDictionary *a) {
@@ -503,13 +503,13 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             [s appendFormat:@"jailbreak root: %@\n", [AAExecutor jbPrefix].length ? [AAExecutor jbPrefix] : @"(未检测到)"];
             [s appendFormat:@"shell: %@\n", [AAExecutor shellPath]];
             return s;
-        }));
+        })];
 
     [list addObject:T(@"task_done", @"misc",
         @"任务完成时调用，提交结果摘要并结束本轮。",
         @{@"summary": P(@"string", @"完成情况与关键结果")}, @[@"summary"], ^NSString *(NSDictionary *a) {
             return [NSString stringWithFormat:@"TASK_DONE:%@", ArgStr(a, @"summary", @"完成")];
-        }));
+        })];
 
     return list;
 }
@@ -526,7 +526,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
                 @"description": t.summary,
                 @"parameters": t.schema,
             },
-        }];
+        })];
     }
     return out;
 }
@@ -538,7 +538,7 @@ static double ArgNum(NSDictionary *a, NSString *k, double def) {
             @"name": t.name,
             @"description": t.summary,
             @"input_schema": t.schema,
-        }];
+        })];
     }
     return out;
 }
