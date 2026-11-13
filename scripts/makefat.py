@@ -59,7 +59,7 @@ def main(out, specs):
         pad = (ALIGN - (start % ALIGN)) % ALIGN
         body += b'\0' * pad
         start = header_len + len(body)
-        entries += struct.pack('>iiIII', cpu, sub, start, len(data), 14)  # 2^14 = 16384
+        entries += struct.pack('>IIIII', cpu & 0xffffffff, sub & 0xffffffff, start, len(data), 14)  # 2^14 = 16384
         body += data
 
     with open(out, 'wb') as f:
