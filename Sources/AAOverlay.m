@@ -17,6 +17,25 @@
 }
 @end
 
+#pragma mark - Pass-through window
+
+@interface AAWindow : UIWindow
+@end
+
+@implementation AAWindow
+
+// Without this the overlay window would swallow every touch in the app: the
+// root view controller's view covers the whole screen and hit-tests as itself.
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
+    UIView *v = [super hitTest:point withEvent:event];
+    if (v == self) return nil;
+    if (v == self.rootViewController.view) return nil;
+    if ([v isKindOfClass:[AAContainer class]]) return nil;
+    return v;
+}
+
+@end
+
 #pragma mark - Usage bar
 
 @interface AAUsageBar : UIView
@@ -116,6 +135,7 @@
 @property (nonatomic, strong) UIStackView *tabBar;
 @property (nonatomic, strong) NSArray<UIButton *> *tabButtons;
 @property (nonatomic, strong) UIView *tabIndicator;
+@property (nonatomic, strong) NSLayoutConstraint *tabCenterX;
 @property (nonatomic, strong) AAUsageBar *usageBar;
 @property (nonatomic, strong) UIView *contentHost;
 @property (nonatomic, assign) NSInteger tab;
@@ -209,6 +229,9 @@
     _usageBar.progress = 0;
     [self addSubview:_usageBar];
 
+    _tabCenterX = [_tabIndicator.centerXAnchor constraintEqualToAnchor:_tabBar.leadingAnchor constant:0];
+    _tabCenterX.active = YES;
+
     _contentHost = [[UIView alloc] init];
     _contentHost.translatesAutoresizingMaskIntoConstraints = NO;
     [self addSubview:_contentHost];
@@ -249,7 +272,6 @@
         [_tabIndicator.topAnchor constraintEqualToAnchor:_tabBar.bottomAnchor constant:1],
         [_tabIndicator.heightAnchor constraintEqualToConstant:2.5],
         [_tabIndicator.widthAnchor constraintEqualToConstant:22],
-        [_tabIndicator.centerXAnchor constraintEqualToAnchor:_tabBar.leadingAnchor constant:0],
 
         [_usageBar.topAnchor constraintEqualToAnchor:_tabIndicator.bottomAnchor constant:2],
         [_usageBar.leadingAnchor constraintEqualToAnchor:self.leadingAnchor],
@@ -314,14 +336,7 @@
         _tabButtons[i].titleLabel.font = [AAU ui:12 weight:on ? UIFontWeightSemibold : UIFontWeightMedium];
     }
     CGFloat w = self.bounds.size.width - 20;
-    if (w > 0) {
-        for (NSLayoutConstraint *c in self.constraints) {
-            if (c.firstItem == _tabIndicator && c.firstAttribute == NSLayoutAttributeCenterX) [c setActive:NO];
-        }
-        NSLayoutConstraint *cx = [_tabIndicator.centerXAnchor constraintEqualToAnchor:_tabBar.leadingAnchor
-                                                                          constant:w / 8.0 + w / 4.0 * tab];
-        cx.active = YES;
-    }
+    if (w > 0) _tabCenterX.constant = w / 8.0 + w / 4.0 * tab;
     if (tab == 2) [_settings reloadUI];
     if (tab == 3) [_history reloadData];
     if (tab == 0) [_chat reload];
@@ -331,15 +346,11 @@
 - (void)tabTapped:(UIButton *)b {
     [self selectTab:b.tag];
     [AAU haptic:0];
-    [UIView animateWithDuration:0.2 animations:^{
-        CGFloat w = self.bounds.size.width - 20;
-        for (NSLayoutConstraint *c in self.constraints) {
-            if (c.firstItem == self.tabIndicator && c.firstAttribute == NSLayoutAttributeCenterX) {
-                c.constant = w / 8.0 + w / 4.0 * b.tag;
-            }
-        }
-        [self layoutIfNeeded];
-    }];
+    CGFloat w = self.bounds.size.width - 20;
+    if (w > 0) {
+        self.tabCenterX.constant = w / 8.0 + w / 4.0 * b.tag;
+        [UIView animateWithDuration:0.22 animations:^{ [self layoutIfNeeded]; }];
+    }
 }
 
 - (void)newTask {
@@ -382,13 +393,7 @@
 - (void)layoutSubviews {
     [super layoutSubviews];
     CGFloat w = self.bounds.size.width - 20;
-    if (w > 0) {
-        for (NSLayoutConstraint *c in self.constraints) {
-            if (c.firstItem == _tabIndicator && c.firstAttribute == NSLayoutAttributeCenterX) {
-                c.constant = w / 8.0 + w / 4.0 * _tab;
-            }
-        }
-    }
+    if (w > 0) _tabCenterX.constant = w / 8.0 + w / 4.0 * _tab;
 }
 
 @end
@@ -461,9 +466,9 @@
 - (void)buildWindow {
     UIWindowScene *scene = [self activeScene];
     if (scene) {
-        _window = [[UIWindow alloc] initWithWindowScene:scene];
+        _window = [[AAWindow alloc] initWithWindowScene:scene];
     } else {
-        _window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+        _window = [[AAWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
     }
     _window.frame = [UIScreen mainScreen].bounds;
     _window.windowLevel = UIWindowLevelAlert + 200;
