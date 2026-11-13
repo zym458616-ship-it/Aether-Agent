@@ -89,6 +89,11 @@ static BOOL AAHIDEvent(CGPoint pt, uint32_t mask, double pressure) {
 @property (nonatomic, strong) NSMutableArray *lastDump;
 @end
 
+static void AAMainSync(void (^block)(void)) {
+    if ([NSThread isMainThread]) block();
+    else dispatch_sync(dispatch_get_main_queue(), block);
+}
+
 @implementation AAUIBridge
 
 + (instancetype)shared {
@@ -201,6 +206,12 @@ static NSString *AATextOf(UIView *v) {
 }
 
 - (NSArray<AAElement *> *)dumpHierarchy {
+    __block NSArray *result = nil;
+    AAMainSync(^{ result = [self dumpLocked]; });
+    return result ?: @[];
+}
+
+- (NSArray<AAElement *> *)dumpLocked {
     [self.weakMap removeAllObjects];
     NSMutableArray *out = [NSMutableArray array];
     NSArray *wins = [self appWindows];
@@ -326,6 +337,12 @@ static NSString *AATextOf(UIView *v) {
 }
 
 - (BOOL)tapElement:(NSString *)eid {
+    __block BOOL ok = NO;
+    AAMainSync(^{ ok = [self tapElementLocked:eid]; });
+    return ok;
+}
+
+- (BOOL)tapElementLocked:(NSString *)eid {
     UIView *v = [self.weakMap objectForKey:eid];
     if (!v) {
         // Try a fresh dump (hierarchy may have changed).
@@ -454,6 +471,12 @@ static UIView *AAFirstResponder(UIView *v) {
 #pragma mark screenshot
 
 - (UIImage *)screenshot {
+    __block UIImage *img = nil;
+    AAMainSync(^{ img = [self screenshotLocked]; });
+    return img;
+}
+
+- (UIImage *)screenshotLocked {
     NSArray *wins = [self appWindows];
     UIWindow *base = nil;
     for (UIWindow *w in wins) {
