@@ -183,7 +183,7 @@
         [inputBar.topAnchor constraintEqualToAnchor:chipScroll.bottomAnchor constant:8],
         [inputBar.leadingAnchor constraintEqualToAnchor:self.leadingAnchor],
         [inputBar.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
-        [inputBar.bottomAnchor constraintEqualToAnchor:self.bottomAnchor constant:-10],
+        [inputBar.bottomAnchor constraintEqualToAnchor:self.safeAreaLayoutGuide.bottomAnchor constant:-8],
         [inputBar.heightAnchor constraintEqualToConstant:40],
 
         [prompt.leadingAnchor constraintEqualToAnchor:inputBar.leadingAnchor constant:10],
