@@ -11,19 +11,24 @@ permissions:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Toolchain info
         run: |
-          xcodebuild -version
-          xcrun --sdk iphoneos --show-sdk-version
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq clang lld llvm python3
+          clang --version | head -2
+          (ld64.lld --version || true) | head -2
+
+      - name: Fetch iPhoneOS SDK
+        run: |
+          chmod +x scripts/*.sh
+          ./scripts/fetch-sdk.sh
 
       - name: Build dylib
-        run: |
-          chmod +x scripts/build.sh
-          ./scripts/build.sh
+        run: ./scripts/build-linux.sh
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -33,12 +38,11 @@ jobs:
           if-no-files-found: error
 
       - name: Publish release asset
-        if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="build-$(date +%Y%m%d-%H%M%S)"
           gh release create "$TAG" build/Aether.dylib \
             --title "Aether $TAG" \
-            --notes "Automated build of Aether.dylib (arm64 + arm64e)." \
+            --notes "Automated build (arm64 + arm64e). Inject into any IPA and re-sign." \
             --latest
